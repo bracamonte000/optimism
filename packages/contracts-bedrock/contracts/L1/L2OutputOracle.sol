@@ -49,6 +49,9 @@ contract L2OutputOracle is Initializable, Semver {
      */
     Types.OutputProposal[] internal l2Outputs;
 
+    // temp:
+    bool internal hasFirstProposal;
+
     /**
      * @notice Emitted when an output is proposed.
      *
@@ -168,14 +171,21 @@ contract L2OutputOracle is Initializable, Semver {
             "L2OutputOracle: only the proposer address can propose new outputs"
         );
 
-        require(
-            // Refactored to inline logic from nextBlockNumber()
-            // _l2BlockNumber == latestBlockNumber() + SUBMISSION_INTERVAL,
-            // Refactored again to inline the logic of latestBlockNumber() when the l2Outputs
-            // mapping is empty.
-            _l2BlockNumber == startingBlockNumber + SUBMISSION_INTERVAL,
-            "L2OutputOracle: block number must be equal to next expected block number"
-        );
+        if (hasFirstProposal) {
+            // This is the current block number check unchanged
+            require(
+                _l2BlockNumber == nextBlockNumber(),
+                "L2OutputOracle: block number must be equal to next expected block number"
+            );
+        } else {
+            // This check is equivalent to the one above, but simplified to make the logic
+            // applied to the first proposal explicit.
+            require(
+                _l2BlockNumber == startingBlockNumber + SUBMISSION_INTERVAL,
+                "L2OutputOracle: block number must be equal to next expected block number"
+            );
+            hasFirstProposal = true;
+        }
 
         require(
             computeL2Timestamp(_l2BlockNumber) < block.timestamp,
