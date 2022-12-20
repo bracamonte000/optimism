@@ -169,7 +169,11 @@ contract L2OutputOracle is Initializable, Semver {
         );
 
         require(
-            _l2BlockNumber == nextBlockNumber(),
+            // Refactored to inline logic from nextBlockNumber()
+            // _l2BlockNumber == latestBlockNumber() + SUBMISSION_INTERVAL,
+            // Refactored again to inline the logic of latestBlockNumber() when the l2Outputs
+            // mapping is empty.
+            _l2BlockNumber == startingBlockNumber + SUBMISSION_INTERVAL,
             "L2OutputOracle: block number must be equal to next expected block number"
         );
 
